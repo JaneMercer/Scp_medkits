@@ -1,0 +1,92 @@
+import cv2  # instal as opencv-python
+import matplotlib.pyplot as plt
+import os
+import random
+import numpy as np
+import pyautogui.screenshotUtil
+from pynput.keyboard import Key, Listener
+
+DATADIR = "C:\\Users\\Ira\PycharmProjects\Scp_templateMatch"
+CATEGORIES = ["medkit_gud"]
+CATEGORIE_MASK = ["test"]
+IMG_SIZE = 1000
+training_data = []
+X = []
+Y = []
+
+#img_mask = cv2.imread('mask.png',0)
+#scaled_mask_img = img_mask[180:1030, 530:1385]
+#cv2.imwrite('mask.png', scaled_mask_img)
+
+
+def create_training_data():
+    for category in CATEGORIES:
+        path = os.path.join(DATADIR, category)
+        path_mask = os.path.join(DATADIR, CATEGORIE_MASK[0])
+
+       # class_num = CATEGORIES.index(category)
+
+        for img in os.listdir(path):
+            try:
+                img_array = cv2.imread(os.path.join(path, img), cv2.IMREAD_GRAYSCALE)
+                for img_m in os.listdir(path_mask):
+                    try:
+                        img_mask = cv2.imread(os.path.join(path_mask, img_m), cv2.IMREAD_GRAYSCALE)
+                        height, width = img_mask.shape
+                       # selected_img = np.zeros((height, width), np.uint8)
+                        selected_img = cv2.bitwise_and(img_array, img_array, mask=img_mask)
+                       # img_array.copyTo(selected_img, img_mask);
+                        cv2.imwrite("MEDKIT_TR_DATA/" + img_m, selected_img)
+                    except Exception as e:
+                        print(e)
+                        pass
+
+                #scaled_v_img = img_array[180:1030, 530:1385]
+                #training_data.append([v, class_num])
+                #training_data.append([img_array, 1])
+            except Exception as e:
+                pass
+
+            #plt.imshow(scaled_v_img, cmap="gray")
+            #plt.show()
+
+
+create_training_data()
+print(len(training_data))
+random.shuffle(training_data)
+
+
+"""
+______________________
+w, h = img.shape
+
+for i=1; i<=w-1,i++:
+    for j=1; j<=h-1,j++:
+        if(img(i:j).pixcolor == white) break;
+        new_img = img[i:j]
+
+#направлення точки від а до б
+
+def le_function(point_A(x0:y0), point_B(x1:y1)):
+def linemaker(screen_points):
+    # Function to take list of points and make them into lines
+
+    is_first = True
+    # Set up some variables to hold x,y coods
+    x0 = y0 = 0
+    # Grab each pair of points from the input list
+    for (x,y) in screen_points:
+        # If its the first point in a set, set x0,y0 to the values
+        if is_first:
+            x0 = x
+            y0 = y
+            is_first = False
+        else:
+            # If its not the fist point yeild previous pair and current pair
+            yield x0,y0,x,y
+            # Set current x,y to start coords of next line
+            x0,y0 = x,y
+            if (img(i:j).pixcolor == white) break;
+
+linemaker([(0,w),(w,0),(h,0),(0,h)]); #як би це ще реалізувати паралельно
+"""
