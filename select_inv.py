@@ -1,21 +1,21 @@
 import cv2  # instal as opencv-python
-# import time
+import ctypes
+from pynput.keyboard import Key, Listener# import time
 import os
 import numpy as np
 import tensorflow as tf
 import pyautogui.screenshotUtil
-import matplotlib.pyplot as plt
-
-# import pyautogui.screenshotUtil
+# import matplotlib.pyplot as plt
 
 DATADIR = "C:\\Users\\Ira\PycharmProjects\Scp_medkits"
 IMG_SIZE = 60
-model = tf.keras.models.load_model("3 - CNV - 64 - ND - 0 - DNS - 1559109706.model")
 inv_coordArr = [(1080, 325), (1250, 450), (1250, 720), (850, 900), (1080, 900), (660, 730), (660, 470), (830, 300)]
+global model, graph
+model = tf.keras.models.load_model("3 - CNV - 64 - ND - 0 - DNS - 1559109706.model")
+graph = tf.get_default_graph()
 
 
 def prepare(img):
-    IMG_SIZE = 60
     new_array = cv2.resize(img, (IMG_SIZE, IMG_SIZE))
     return new_array.reshape(-1, IMG_SIZE, IMG_SIZE, 1)
 
@@ -92,16 +92,43 @@ def click_inv(index_inv):
     pyautogui.moveTo(x, y, duration=0.1)
 
 
-scrn = cv2.imread('for-testing.png', 0)
+def run_medkit():
+    print(IMG_SIZE)
+    scrn_g = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_BGR2GRAY)
+    scrn2 = cv2.imread('for-testing.png', 0)
+    print(type(scrn_g))
+    print(type(scrn2))
+    print(scrn_g.shape)
+    print(scrn2.shape)
+    index_inv = select_mask(scrn_g)
+    print('__________')
+    print(index_inv)
 
-index_inv = select_mask(scrn)
+    if index_inv == 0:
+        print("No medkit")
+    else:
+        click_inv(index_inv)
 
-print('__________')
-print(index_inv)
 
-if index_inv == 0:
-    print("No medkit")
-else:
-    click_inv(index_inv)
+def run():
+    ctypes.windll.user32.MessageBoxW(0, "Scp medkits runs now", "Start", 0x1000)
+
+    def on_release(key):
+
+        if key == Key.delete:
+                    run_medkit()
+
+        if key == Key.scroll_lock:
+            ctypes.windll.user32.MessageBoxW(0, "Script stopped", "Exiting", 0x1000)
+            listener.stop()
+
+    with Listener(
+            on_press=None,
+            on_release=on_release) as listener:
+        listener.join()
+
+
+run_medkit()
+
 
 # scrn = pyautogui.screenshot()
