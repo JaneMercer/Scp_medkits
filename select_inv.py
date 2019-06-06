@@ -5,14 +5,16 @@ import os
 import numpy as np
 import tensorflow as tf
 import pyautogui.screenshotUtil
+# from tensorflow import Graph, Session
 # import matplotlib.pyplot as plt
 
 DATADIR = "C:\\Users\\Ira\PycharmProjects\Scp_medkits"
 IMG_SIZE = 60
 inv_coordArr = [(1080, 325), (1250, 450), (1250, 720), (850, 900), (1080, 900), (660, 730), (660, 470), (830, 300)]
-global model, graph
-model = tf.keras.models.load_model("3 - CNV - 64 - ND - 0 - DNS - 1559109706.model")
-graph = tf.get_default_graph()
+model = tf.keras.models.load_model("3 - CNV - 64 - ND - 0 - DNS - 1559109706.model",compile=True)
+
+# global graph, model
+# graph = tf.get_default_graph()
 
 
 def prepare(img):
@@ -23,24 +25,26 @@ def prepare(img):
 def run_predict(img_):
     try:
         if img_.shape:
-            prediction = model.predict([prepare(img_)])
-            if prediction == 1:
-                category = 1
-                # category = "Medkit"
-            else:
-                category = 0
-                # category = "Not Medkit"
+             # with graph1.as_default():
+                prediction = model.predict([prepare(img_)])
+                if prediction == 1:
+                    category = 1
+                    # category = "Medkit"
+                else:
+                    category = 0
+                    # category = "Not Medkit"
 
-            print(category)
-            # plt.imshow(img_, cmap="gray")
-            # plt.show()
+                # print(category)
+                # plt.imshow(img_, cmap="gray")
+                # plt.show()
+                return category
         else:
             print("Dos not exist")
 
     except Exception as e:
         print(e)
         pass
-    return category
+
 
 
 def select(mat, point0, point1):
@@ -84,7 +88,7 @@ def select_mask(img):
         except Exception as e:
             print(e)
             pass
-    return 0
+    return -1
 
 
 def click_inv(index_inv):
@@ -93,18 +97,10 @@ def click_inv(index_inv):
 
 
 def run_medkit():
-    print(IMG_SIZE)
     scrn_g = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_BGR2GRAY)
-    scrn2 = cv2.imread('for-testing.png', 0)
-    print(type(scrn_g))
-    print(type(scrn2))
-    print(scrn_g.shape)
-    print(scrn2.shape)
     index_inv = select_mask(scrn_g)
-    print('__________')
-    print(index_inv)
-
-    if index_inv == 0:
+    print('_____Index: '+index_inv)
+    if index_inv == -1:
         print("No medkit")
     else:
         click_inv(index_inv)
@@ -115,12 +111,12 @@ def run():
 
     def on_release(key):
 
-        if key == Key.delete:
-                    run_medkit()
+        if key == Key.tab:
+            run_medkit()
 
         if key == Key.scroll_lock:
             ctypes.windll.user32.MessageBoxW(0, "Script stopped", "Exiting", 0x1000)
-            listener.stop()
+            return False
 
     with Listener(
             on_press=None,
@@ -128,7 +124,4 @@ def run():
         listener.join()
 
 
-run_medkit()
-
-
-# scrn = pyautogui.screenshot()
+run()
