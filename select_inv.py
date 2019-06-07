@@ -6,35 +6,41 @@ import numpy as np
 import tensorflow as tf
 import pyautogui.screenshotUtil
 # from tensorflow import Graph, Session
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 DATADIR = "C:\\Users\\Ira\PycharmProjects\Scp_medkits"
-IMG_SIZE = 60
+IMG_SIZE = 60 #depends on dataset
 inv_coordArr = [(1080, 325), (1250, 450), (1250, 720), (850, 900), (1080, 900), (660, 730), (660, 470), (830, 300)]
-model = tf.keras.models.load_model("3 - CNV - 64 - ND - 0 - DNS - 1559109706.model",compile=True)
+model = tf.keras.models.load_model("3 - CNV - 64 - ND - 0 - DNS - 1559894573.model",compile=True)
 
 # global graph, model
 # graph = tf.get_default_graph()
 
 
-def prepare(img):
-    new_array = cv2.resize(img, (IMG_SIZE, IMG_SIZE))
-    return new_array.reshape(-1, IMG_SIZE, IMG_SIZE, 1)
+# def prepare(img):
+#     new_array = cv2.resize(img, (IMG_SIZE, IMG_SIZE))
+#     return new_array.reshape(-1, IMG_SIZE, IMG_SIZE, 1)
+
+def m_dft(orig_img):
+    img = cv2.resize(orig_img, (IMG_SIZE, IMG_SIZE))
+    dft = cv2.dft(np.float32(img), flags=cv2.DFT_COMPLEX_OUTPUT) #discrete Fourier transform (DFT)
+    dft_shift = np.fft.fftshift(dft)
+    magnitude_spectrum = 20 * np.log(cv2.magnitude(dft_shift[:, :, 0], dft_shift[:, :, 1])).astype('uint8')
+    return magnitude_spectrum.reshape(-1, IMG_SIZE, IMG_SIZE, 1)
 
 
 def run_predict(img_):
     try:
         if img_.shape:
-             # with graph1.as_default():
-                prediction = model.predict([prepare(img_)])
+                prediction = model.predict([m_dft(img_)])
                 if prediction == 1:
                     category = 1
-                    # category = "Medkit"
+                    # c = "Medkit"
                 else:
                     category = 0
-                    # category = "Not Medkit"
+                    # c = "Not Medkit"
 
-                # print(category)
+                # print(c)
                 # plt.imshow(img_, cmap="gray")
                 # plt.show()
                 return category
@@ -81,8 +87,7 @@ def select_mask(img):
             if height_к >= IMG_SIZE or width_к >= IMG_SIZE:
                 scaled_res = cv2.resize(res, (IMG_SIZE, IMG_SIZE))
 
-                predict_res = run_predict(scaled_res)  # add import p-Predict
-                # img_indx.append((img_m, predict_res))
+                predict_res = run_predict(scaled_res)
                 if predict_res == 1:
                     return indx
         except Exception as e:
@@ -94,12 +99,17 @@ def select_mask(img):
 def click_inv(index_inv):
     x, y = inv_coordArr[index_inv]
     pyautogui.moveTo(x, y, duration=0.1)
+    pyautogui.click(x, y)
+    pyautogui.PAUSE = 0.3
+    pyautogui.click(x, y)
+    pyautogui.press('alt')
+
 
 
 def run_medkit():
     scrn_g = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_BGR2GRAY)
     index_inv = select_mask(scrn_g)
-    print('_____Index: '+index_inv)
+    print('Index: ',index_inv)
     if index_inv == -1:
         print("No medkit")
     else:
@@ -112,6 +122,7 @@ def run():
     def on_release(key):
 
         if key == Key.tab:
+            pyautogui.press('alt')
             run_medkit()
 
         if key == Key.scroll_lock:
