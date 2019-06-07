@@ -1,12 +1,10 @@
 import cv2  # instal as opencv-python
 import ctypes
-from pynput.keyboard import Key, Listener# import time
+from pynput.keyboard import Key, KeyCode, Listener# import time
 import os
 import numpy as np
 import tensorflow as tf
 import pyautogui.screenshotUtil
-# from tensorflow import Graph, Session
-import matplotlib.pyplot as plt
 
 DATADIR = "C:\\Users\\Ira\PycharmProjects\Scp_medkits"
 IMG_SIZE = 60 #depends on dataset
@@ -98,12 +96,10 @@ def select_mask(img):
 
 def click_inv(index_inv):
     x, y = inv_coordArr[index_inv]
-    pyautogui.moveTo(x, y, duration=0.1)
     pyautogui.click(x, y)
     pyautogui.PAUSE = 0.3
     pyautogui.click(x, y)
     pyautogui.press('alt')
-
 
 
 def run_medkit():
@@ -121,7 +117,7 @@ def run():
 
     def on_release(key):
 
-        if key == Key.tab:
+        if key == KeyCode.from_char('f'):
             pyautogui.press('alt')
             run_medkit()
 
@@ -129,10 +125,25 @@ def run():
             ctypes.windll.user32.MessageBoxW(0, "Script stopped", "Exiting", 0x1000)
             return False
 
+    # with Listener(
+    #         on_press=None,
+    #         on_release=on_release) as listener:
+    #     listener.join()
+
     with Listener(
             on_press=None,
-            on_release=on_release) as listener:
-        listener.join()
+            on_release=on_release,
+            suppress=False) as listener:
+        try:
+            listener.join(0)
+        except Exception as e:
+            print(e)
+
+    # listener = Listener(
+    #     on_press=None,
+    #     on_release=on_release,
+    #     suppress=False)
+    # listener.start()
 
 
 run()
